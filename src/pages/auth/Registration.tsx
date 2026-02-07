@@ -40,14 +40,12 @@ export default function Registration () {
   const [isLoading, setIsLoading] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
 
-  const { register, handleSubmit, control, reset, formState: { errors }, watch } = useForm<RegistrationFormData>({
+  const { register, handleSubmit, control, reset, formState: { errors } } = useForm<RegistrationFormData>({
     resolver: zodResolver(RegistrationSchema),
     defaultValues: {
       currency: "",
     }
   });
-
-  const password = watch("password");
 
   const onSubmit = async (data: any) => {
     setIsLoading(true);

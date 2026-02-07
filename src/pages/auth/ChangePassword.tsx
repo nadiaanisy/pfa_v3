@@ -62,7 +62,7 @@ export default function ChangePassword () {
     setIsLoading(true);
     try {
       await ChangePasswordFunction(user, data);
-      reset();
+      resetNew();
       toast.success("Password changed successfully! Redirecting to login...");
 
       setIsRedirecting(true);
