@@ -26,10 +26,13 @@ import {
   AvatarFallback, 
   AvatarImage
 } from '../components/ui/avatar';
+import {
+  APP_NAME,
+  DEFAULT_AVATAR
+} from '../miscellaneous/Constants';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
 import { cn } from '../components/functions/utils';
-import { APP_NAME } from '../miscellaneous/Constants';
 import { useAuth } from '../miscellaneous/Providers';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { NAVIGATION } from '../miscellaneous/Constants';
@@ -168,7 +171,7 @@ export default function DashboardLayout() {
                 <p className="text-xs text-slate-500 dark:text-slate-400">Admin</p>
               </div>
               <Avatar className="h-9 w-9 border border-slate-200 dark:border-slate-700">
-                <AvatarImage src={user?.avatar_url || "https://github.com/shadcn.png"} />
+                <AvatarImage src={user?.avatar_url || DEFAULT_AVATAR} />
                 <AvatarFallback>U</AvatarFallback>
               </Avatar>
             </div>
