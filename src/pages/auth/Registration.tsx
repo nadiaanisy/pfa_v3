@@ -86,7 +86,7 @@ export default function Registration () {
             <div className="grid gap-2">
               <Label htmlFor="fullname" className="sr-only">Full Name</Label>
               <div className="relative">
-                <User className="absolute left-3 top-3 h-5 w-5 text-slate-400" />
+                <User className="absolute left-3 top-3 h-5 w-5 text-slate-900 dark:text-slate-400" />
                 <Input
                   id="fullname"
                   placeholder="Your Full Name"
@@ -107,7 +107,7 @@ export default function Registration () {
             <div className="grid gap-2">
               <Label htmlFor="username" className="sr-only">Username</Label>
               <div className="relative">
-                <AtSign className="absolute left-3 top-3 h-5 w-5 text-slate-400" />
+                <AtSign className="absolute left-3 top-3 h-5 w-5 text-slate-900 dark:text-slate-400" />
                 <Input
                   id="username"
                   placeholder="Your Username"
@@ -161,7 +161,7 @@ export default function Registration () {
             <div className="grid gap-2">
               <Label htmlFor="email" className="sr-only">Email</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-3 h-5 w-5 text-slate-400" />
+                <Mail className="absolute left-3 top-3 h-5 w-5 text-slate-900 dark:text-slate-400" />
                 <Input
                   id="email"
                   placeholder="Your Email"
@@ -182,7 +182,7 @@ export default function Registration () {
             <div className="grid gap-2">
               <Label htmlFor="password" className="sr-only">Password</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 h-5 w-5 text-slate-400" />
+                <Lock className="absolute left-3 top-3 h-5 w-5 text-slate-900 dark:text-slate-400" />
                 <Input
                   id="password"
                   placeholder="Your Password"
@@ -202,7 +202,7 @@ export default function Registration () {
             <div className="grid gap-2">
               <Label htmlFor="confirmPassword" className="sr-only">Confirm Password</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 h-5 w-5 text-slate-400" />
+                <Lock className="absolute left-3 top-3 h-5 w-5 text-slate-900 dark:text-slate-400" />
                 <Input
                   id="confirmPassword"
                   placeholder="Confirm Your Password"

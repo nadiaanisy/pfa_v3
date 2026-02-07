@@ -67,7 +67,7 @@ export default function Login () {
             <div className="grid gap-2">
               <Label htmlFor="identifier" className="sr-only">Email or Username</Label>
               <div className="relative">
-                <User className="absolute left-3 top-3 h-5 w-5 text-slate-400" />
+                <User className="absolute left-3 top-3 h-5 w-5 text-slate-900 dark:text-slate-400"/>
                 <Input
                   id="identifier"
                   placeholder="Email or Username"
@@ -88,7 +88,7 @@ export default function Login () {
             <div className="grid gap-2">
               <Label htmlFor="password" className="sr-only">Password</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 h-5 w-5 text-slate-400" />
+                <Lock className="absolute left-3 top-3 h-5 w-5 text-slate-900 dark:text-slate-400"/>
                 <Input
                   id="password"
                   placeholder="Password"
