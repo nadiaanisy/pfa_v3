@@ -18,9 +18,11 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Button } from '../../components/ui/button';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useAuth } from '../../miscellaneous/Providers';
 import { LoginFunction } from '../../components/functions/auth';
 
 export default function Login () {
+  const { login } = useAuth();
   const navigate = useNavigate();
   
   const [isLoading, setIsLoading] = useState(false);
@@ -35,6 +37,7 @@ export default function Login () {
       const user = await LoginFunction(data);
       if (!user) return;
 
+      login(user);
       toast.success("Welcome back!");
       setTimeout(() => {
         navigate("/dashboard");

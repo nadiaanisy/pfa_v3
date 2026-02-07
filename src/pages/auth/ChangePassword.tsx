@@ -24,7 +24,7 @@ import { Button } from '../../components/ui/button';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ChangePasswordFunction, FindAccountFunction } from '../../components/functions/auth';
 
-export default function ForgotPassword () {
+export default function ChangePassword () {
   const navigate = useNavigate();
 
   const [user, setUser] = useState<any>();
