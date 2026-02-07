@@ -33,7 +33,8 @@ export const updateUserProfileFunction = async (payload: any) => {
       {
         fullname: payload.fullname,
         username: payload.username,
-        email: payload.email
+        email: payload.email,
+        currency: payload.currency
       }
     )
     return true;
@@ -71,6 +72,15 @@ export const updateUserPasswordFunction = async (payload: any) => {
       { column: "id", value: currentUser.id },
       { password_hash: hashedPassword }
     );
+    return true;
+  } catch (err: any) {
+    return false;
+  }
+};
+
+export const deleteAccountFunction = async (userId: string) => {
+  try {
+    await usersDB.delete({ column: "id", value: userId });
     return true;
   } catch (err: any) {
     return false;

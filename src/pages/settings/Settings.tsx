@@ -3,16 +3,17 @@ import {
   useState
 } from 'react';
 import { 
-  User, 
-  Lock, 
-  Palette, 
-  Bell, 
-  Shield, 
+  // User, 
+  // Lock, 
+  // Palette, 
+  // Bell, 
+  // Shield, 
   Save, 
+  // Trash2, 
+  Mail,
   Trash2, 
-  Mail, 
-  Smartphone,
-  LogOut
+  // Smartphone,
+  // LogOut
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -21,8 +22,9 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  CardFooter
+  // CardFooter
 } from '../../components/ui/card';
+
 import {
   Tabs,
   TabsContent,
@@ -33,13 +35,32 @@ import {
   Avatar,
   AvatarImage
 } from '../../components/ui/avatar';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../components/ui/select';
 import { motion } from 'motion/react';
 import {
+  CURRENCIES,
   DEFAULT_AVATAR,
-  INTERFACE_DENSITY,
+  // INTERFACE_DENSITY,
   TABS
 } from '../../miscellaneous/Constants';
 import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '../../components/ui/alert-dialog';
+import {
+  deleteAccountFunction,
   fetchCurrentUserFunction,
   updateUserAvatarFunction,
   updateUserPasswordFunction,
@@ -48,13 +69,13 @@ import {
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Button } from '../../components/ui/button';
-import { Switch } from '../../components/ui/switch';
+// import { Switch } from '../../components/ui/switch';
 import { useAuth } from '../../miscellaneous/Providers';
 import { Separator } from '../../components/ui/separator';
 import { ThemeToggle } from '../../components/ThemeToggle';
 
 export default function Settings() {
-  const { setUser, user } = useAuth();
+  const { setUser, user, logout } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   // Profile State
@@ -62,16 +83,18 @@ export default function Settings() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || "");
+  const [currency, setCurrency] = useState(user?.currency || "MYR");
 
   // Password State
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [open, setOpen] = useState(false);
 
   // Appearance State
-  const [selectedDensity, setSelectedDensity] = useState<string>(
-    user?.preferences?.interfaceDensity || INTERFACE_DENSITY[1]
-  );
+  // const [selectedDensity, setSelectedDensity] = useState<string>(
+  //   user?.preferences?.interfaceDensity || INTERFACE_DENSITY[1]
+  // );
 
   // Notification State
   // const [emailNotifs, setEmailNotifs] = useState(true);
@@ -84,6 +107,7 @@ export default function Settings() {
       setUsername(user.username || "");
       setEmail(user.email || "");
       setAvatarUrl(user.avatar_url || "");
+      setCurrency(user.currency || "MYR");
     }
   }, [user]);
 
@@ -153,7 +177,8 @@ export default function Settings() {
       id: user.id,
       fullname,
       username,
-      email
+      email,
+      currency
     }
 
     setIsLoading(true);
@@ -212,6 +237,27 @@ export default function Settings() {
      setNewPassword("");
      setConfirmPassword("");
     }
+  };
+
+  const handleDeleteAccount = async () => {
+    setIsLoading(true);
+
+    const result = await deleteAccountFunction(user.id);
+
+    if (!result) {
+      toast.error("Failed to delete account");
+      setIsLoading(false);
+      return;
+    }
+
+    toast.success("Account deleted successfully. We're sorry to see you go!");
+
+    // Close dialog manually
+    setOpen(false);
+
+    setTimeout(() => {
+      logout();
+    }, 2000);
   };
 
   const motionVariants = {
@@ -315,18 +361,45 @@ export default function Settings() {
                       />
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email Address</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-600 dark:text-slate-400" />
-                      <Input
-                        id="email"
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="pl-9 border-slate-300 bg-[#f3f3f5] dark:bg-[color-mix(in_oklab,var(--input)_30%,transparent)] text-slate-900 dark:text-slate-100 focus:ring-indigo-500 focus:border-indigo-500"
-                        placeholder="john@example.com"
-                      />
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email Address</Label>
+                      <div className="relative">
+                        <Mail className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-600 dark:text-slate-400" />
+                        <Input
+                          id="email"
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="pl-9 border-slate-300 bg-[#f3f3f5] dark:bg-[color-mix(in_oklab,var(--input)_30%,transparent)] text-slate-900 dark:text-slate-100 focus:ring-indigo-500 focus:border-indigo-500"
+                          placeholder="john@example.com"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="currency">Currency</Label>
+                      <Select
+                        onValueChange={setCurrency}
+                        value={currency}
+                      >
+                        <SelectTrigger
+                          id="currency"
+                          className="pl-9 border-slate-300 bg-[#f3f3f5] dark:bg-[color-mix(in_oklab,var(--input)_30%,transparent)] text-slate-900 dark:text-slate-100 focus:ring-indigo-500 focus:border-indigo-500"
+                          
+                        >
+                          <SelectValue placeholder="Select currency" />
+                        </SelectTrigger>
+                        <SelectContent
+                          className="bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800"
+                        >
+                          {CURRENCIES.map((currency) => (
+                            <SelectItem key={currency.value} value={currency.value}>
+                              {currency.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                   <div className="flex justify-end pt-4">
@@ -402,6 +475,63 @@ export default function Settings() {
                     </Button>
                   </div>
                 </form>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          <motion.div
+            key="account"
+            initial="hidden"
+            animate="show"
+            variants={motionVariants}
+          >
+            <Card className="border-red-200 bg-red-50/50 dark:border-red-900/50 dark:bg-red-900/10 mt-5">
+              <CardHeader>
+                <CardTitle className="text-red-600 dark:text-red-400">Danger Zone</CardTitle>
+                <CardDescription className="text-red-600/80 dark:text-red-400/80">
+                  Irreversible actions for your account.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <h4 className="font-medium text-slate-900 dark:text-slate-100">Delete Account</h4>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                      Permanently remove your account and all data.
+                    </p>
+                  </div>
+                  <AlertDialog open={open} onOpenChange={setOpen}>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size="sm">
+                        <Trash2 className="mr-2 h-4 w-4" /> Delete Account
+                      </Button>
+                    </AlertDialogTrigger>
+
+                    <AlertDialogContent className="bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-800">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone. This will permanently delete your
+                          account and remove your data from our servers.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+
+                      <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isLoading}>
+                          Cancel
+                        </AlertDialogCancel>
+                        <Button
+                          variant="destructive"
+                          onClick={handleDeleteAccount}
+                          disabled={isLoading}
+                        >
+                          {isLoading ? "Deleting..." : "Confirm"}
+                        </Button>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+
+                </div>
               </CardContent>
             </Card>
           </motion.div>
