@@ -2,18 +2,9 @@ import {
   useEffect,
   useState
 } from 'react';
-import { 
-  // User, 
-  // Lock, 
-  // Palette, 
-  // Bell, 
-  // Shield, 
-  Save, 
-  // Trash2, 
-  Mail,
-  Trash2, 
-  // Smartphone,
-  // LogOut
+import {
+  Trash2,
+  Loader2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -24,7 +15,6 @@ import {
   CardTitle,
   // CardFooter
 } from '../../components/ui/card';
-
 import {
   Tabs,
   TabsContent,
@@ -76,19 +66,24 @@ import { ThemeToggle } from '../../components/ThemeToggle';
 
 export default function Settings() {
   const { setUser, user, logout } = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isProfileLoading, setIsProfileLoading] = useState(false);
+  const [isPasswordLoading, setIsPasswordLoading] = useState(false);
+  const [isAvatarLoading, setIsAvatarLoading] = useState(false);
+  const [isAvatarRemovedLoading, setIsAvatarRemovedLoading] = useState(false);
+  const [isDeleteLoading, setIsDeleteLoading] = useState(false);
 
   // Profile State
   const [fullname, setFullname] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
-  const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || "");
-  const [currency, setCurrency] = useState(user?.currency || "MYR");
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [currency, setCurrency] = useState("MYR");
 
   // Password State
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
   const [open, setOpen] = useState(false);
 
   // Appearance State
@@ -102,20 +97,18 @@ export default function Settings() {
   // const [pushNotifs, setPushNotifs] = useState(true);
 
   useEffect(() => {
-    if (user) {
-      setFullname(user.fullname || "");
-      setUsername(user.username || "");
-      setEmail(user.email || "");
-      setAvatarUrl(user.avatar_url || "");
-      setCurrency(user.currency || "MYR");
-    }
+    if (!user) return;
+    setFullname(user.fullname || "");
+    setUsername(user.username || "");
+    setEmail(user.email || "");
+    setAvatarUrl(user.avatar_url || "");
+    setCurrency(user.currency || "MYR");
   }, [user]);
 
   const handleRemoveAvatar = async () => {
-    setIsLoading(true);
+    setIsAvatarRemovedLoading(true);
     try {
       const success = await updateUserAvatarFunction(user, null);
-
       if (!success) {
         toast.error("Failed to remove avatar");
         return;
@@ -123,33 +116,30 @@ export default function Settings() {
 
       const updatedUser = await fetchCurrentUserFunction(user.id);
       setUser(updatedUser);
-
       toast.success("Avatar removed successfully!");
     } catch (err: any) {
       toast.error(err.message || "Something went wrong");
     } finally {
-      setIsLoading(false);
+      setIsAvatarRemovedLoading(false);
     }
   };
 
   const handleUploadAvatar = async (base64: string) => {
-    setIsLoading(true);
+    setIsAvatarLoading(true);
     try {
       const success = await updateUserAvatarFunction(user, base64);
-
       if (!success) {
         toast.error("Failed to upload avatar");
         return;
       }
-      
+
       const updatedUser = await fetchCurrentUserFunction(user.id);
       setUser(updatedUser);
-
       toast.success("Avatar updated successfully!");
     } catch (err: any) {
       toast.error(err.message || "Something went wrong");
     } finally {
-      setIsLoading(false);
+      setIsAvatarLoading(false);
     }
   };
 
@@ -157,47 +147,43 @@ export default function Settings() {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
-    input.onchange = async (e: any) => {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (event: any) => {
-          handleUploadAvatar(event.target.result);
-        };
-        reader.readAsDataURL(file);
-      }
+    input.onchange = (e: any) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event: any) =>
+        handleUploadAvatar(event.target.result);
+      reader.readAsDataURL(file);
     };
     input.click();
   };
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const payload = {
-      id: user.id,
-      fullname,
-      username,
-      email,
-      currency
-    }
 
-    setIsLoading(true);
+    setIsProfileLoading(true);
     try {
-      const success = await updateUserProfileFunction(payload);
+      const success = await updateUserProfileFunction({
+        id: user.id,
+        fullname,
+        username,
+        email,
+        currency
+      });
 
       if (!success) {
         toast.error("Failed to update profile");
         return;
       }
+
       const updatedUser = await fetchCurrentUserFunction(user.id);
       setUser(updatedUser);
-
       toast.success("Profile updated successfully!");
     } catch (err: any) {
       toast.error(err.message || "Failed to update profile");
-    }
-    finally {
-      setIsLoading(false);
+    } finally {
+      setIsProfileLoading(false);
     }
   };
 
@@ -210,54 +196,49 @@ export default function Settings() {
     }
 
     if (newPassword !== confirmPassword) {
-      toast.error("New password and confirm password do not match");
+      toast.error("Passwords do not match");
       return;
     }
-    
-    const payload = {
-      id: user.id,
-      currentPassword,
-      newPassword,
-      confirmPassword
-    }
 
-    setIsLoading(true);
+    setIsPasswordLoading(true);
     try {
-      const result = await updateUserPasswordFunction(payload);
+      const result = await updateUserPasswordFunction({
+        id: user.id,
+        currentPassword,
+        newPassword,
+        confirmPassword
+      });
+
       if (!result) {
         toast.error("Failed to update password");
         return;
       }
-      toast.success("Password updated successfully!");
+
+      toast.success("Password updated!");
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
     } catch (err: any) {
       toast.error(err.message || "Failed to update password");
     } finally {
-     setIsLoading(false); 
-     setCurrentPassword("");
-     setNewPassword("");
-     setConfirmPassword("");
+      setIsPasswordLoading(false);
     }
   };
 
   const handleDeleteAccount = async () => {
-    setIsLoading(true);
+    setIsDeleteLoading(true);
 
     const result = await deleteAccountFunction(user.id);
-
     if (!result) {
       toast.error("Failed to delete account");
-      setIsLoading(false);
+      setIsDeleteLoading(false);
       return;
     }
 
-    toast.success("Account deleted successfully. We're sorry to see you go!");
-
-    // Close dialog manually
+    toast.success("Account deleted. We're sorry to see you go.");
     setOpen(false);
 
-    setTimeout(() => {
-      logout();
-    }, 2000);
+    setTimeout(() => logout(), 2000);
   };
 
   const motionVariants = {
@@ -274,12 +255,12 @@ export default function Settings() {
 
       <Tabs defaultValue="profile" className="w-full">
         {/* Tabs List */}
-        <TabsList className="grid w-full grid-cols-2 md:w-auto md:grid-cols-4 bg-slate-100 p-1 dark:bg-slate-800 rounded-lg">
+        <TabsList className="grid w-full grid-cols-2 md:w-auto md:grid-cols-4 bg-slate-200 p-1 dark:bg-slate-800 rounded-lg">
           {TABS.map((tab) => (
             <TabsTrigger
               key={tab.value}
               value={tab.value}
-              className="flex items-center gap-2 px-3 rounded-md data-[state=active]:bg-white data-[state=active]:dark:bg-slate-900/50 data-[state=active]:shadow data-[state=active]:text-indigo-600 dark:data-[state=active]:text-indigo-400"
+              className="flex items-center gap-2 px-3 rounded-md data-[state=active]:bg-slate-500 data-[state=active]:dark:bg-white data-[state=active]:shadow data-[state=active]:text-white dark:data-[state=active]:text-indigo-400"
             >
               {tab.icon}
               <span className="hidden sm:inline">{tab.label}</span>
@@ -303,11 +284,7 @@ export default function Settings() {
               <CardContent className="space-y-6">
                 <div className="flex flex-col gap-4 md:flex-row md:items-center">
                   <Avatar className="h-24 w-24 border-2 border-slate-100 dark:border-slate-800">
-                    {avatarUrl ? (
-                      <AvatarImage src={avatarUrl} />
-                    ) : (
-                      <AvatarImage src={DEFAULT_AVATAR} />
-                    )}
+                    <AvatarImage src={avatarUrl || DEFAULT_AVATAR} />
                   </Avatar>
                   <div className="space-y-1">
                     <h3 className="font-medium text-slate-900 dark:text-slate-100">Profile Picture</h3>
@@ -319,17 +296,19 @@ export default function Settings() {
                         variant="outline"
                         size="sm"
                         onClick={handleUploadAvatarClick}
-                        disabled={isLoading}
+                        disabled={isAvatarLoading}
                       >
-                        Upload new
+                        {isAvatarLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                        Upload New
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
                         className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
                         onClick={handleRemoveAvatar}
-                        disabled={!avatarUrl || isLoading}
+                        disabled={!avatarUrl || isAvatarRemovedLoading}
                       >
+                        {isAvatarRemovedLoading && <Loader2 className="h-4 w-4 animate-spin" />}
                         Remove
                       </Button>
                     </div>
@@ -346,8 +325,8 @@ export default function Settings() {
                         id="fullname"
                         value={fullname}
                         onChange={(e) => setFullname(e.target.value)}
-                        placeholder="John Doe"
-                        className="border-slate-300 bg-[#f3f3f5] dark:bg-[color-mix(in_oklab,var(--input)_30%,transparent)] text-slate-900 dark:text-slate-100 focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="Full name"
+                        className="text-slate-900 dark:text-slate-100 focus:ring-indigo-500 focus:border-indigo-500"
                       />
                     </div>
                     <div className="space-y-2">
@@ -356,27 +335,22 @@ export default function Settings() {
                         id="username"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
-                        placeholder="johndoe"
-                        className="border-slate-300 bg-[#f3f3f5] dark:bg-[color-mix(in_oklab,var(--input)_30%,transparent)] text-slate-900 dark:text-slate-100 focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="Username"
+                        className="text-slate-900 dark:text-slate-100 focus:ring-indigo-500 focus:border-indigo-500"
                       />
                     </div>
                   </div>
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
                       <Label htmlFor="email">Email Address</Label>
-                      <div className="relative">
-                        <Mail className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-600 dark:text-slate-400" />
-                        <Input
-                          id="email"
-                          type="email"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          className="pl-9 border-slate-300 bg-[#f3f3f5] dark:bg-[color-mix(in_oklab,var(--input)_30%,transparent)] text-slate-900 dark:text-slate-100 focus:ring-indigo-500 focus:border-indigo-500"
-                          placeholder="john@example.com"
-                        />
-                      </div>
+                      <Input
+                        id="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="example@example.com"
+                        className="text-slate-900 dark:text-slate-100 focus:ring-indigo-500 focus:border-indigo-500"
+                      />
                     </div>
-
                     <div className="space-y-2">
                       <Label htmlFor="currency">Currency</Label>
                       <Select
@@ -385,7 +359,7 @@ export default function Settings() {
                       >
                         <SelectTrigger
                           id="currency"
-                          className="pl-9 border-slate-300 bg-[#f3f3f5] dark:bg-[color-mix(in_oklab,var(--input)_30%,transparent)] text-slate-900 dark:text-slate-100 focus:ring-indigo-500 focus:border-indigo-500" 
+                          className="text-slate-900 dark:text-slate-100 focus:ring-indigo-500 focus:border-indigo-500"
                         >
                           <SelectValue placeholder="Select currency" />
                         </SelectTrigger>
@@ -404,10 +378,11 @@ export default function Settings() {
                   <div className="flex justify-end pt-4">
                     <Button
                       type="submit"
-                      disabled={isLoading}
+                      disabled={isProfileLoading}
                       className="bg-indigo-600 hover:bg-indigo-700 text-white"
                     >
-                      {isLoading ? "Saving..." : "Save Changes"}
+                      {isProfileLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                      Save Changes
                     </Button>
                   </div>
                 </form>
@@ -438,7 +413,8 @@ export default function Settings() {
                       type="password"
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
-                      className="border-slate-300 bg-[#f3f3f5] dark:bg-[color-mix(in_oklab,var(--input)_30%,transparent)] text-slate-900 dark:text-slate-100 focus:ring-indigo-500 focus:border-indigo-500"
+                      placeholder="Current password"
+                      className="text-slate-900 dark:text-slate-100 focus:ring-indigo-500 focus:border-indigo-500"
                     />
                   </div>
                   <div className="grid gap-4 md:grid-cols-2">
@@ -447,9 +423,10 @@ export default function Settings() {
                       <Input
                         id="new-password"
                         type="password"
+                        placeholder="New password"
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
-                        className="border-slate-300 bg-[#f3f3f5] dark:bg-[color-mix(in_oklab,var(--input)_30%,transparent)] text-slate-900 dark:text-slate-100 focus:ring-indigo-500 focus:border-indigo-500"
+                        className="text-slate-900 dark:text-slate-100 focus:ring-indigo-500 focus:border-indigo-500"
                       />
                     </div>
                     <div className="space-y-2">
@@ -457,33 +434,29 @@ export default function Settings() {
                       <Input
                         id="confirm-password"
                         type="password"
+                        placeholder="Confirm password"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="border-slate-300 bg-[#f3f3f5] dark:bg-[color-mix(in_oklab,var(--input)_30%,transparent)] text-slate-900 dark:text-slate-100 focus:ring-indigo-500 focus:border-indigo-500"
+                        className="text-slate-900 dark:text-slate-100 focus:ring-indigo-500 focus:border-indigo-500"
                       />
                     </div>
                   </div>
                   <div className="flex justify-end pt-2">
                     <Button
                       type="submit"
-                      disabled={isLoading}
+                      disabled={isPasswordLoading}
                       className="bg-indigo-600 hover:bg-indigo-700 text-white"
                       onClick={handlePasswordUpdate}
                     >
-                      <Save className="mr-2 h-4 w-4" /> Update Password
+                      {isPasswordLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                      Update Password
                     </Button>
                   </div>
                 </form>
               </CardContent>
             </Card>
-          </motion.div>
 
-          <motion.div
-            key="account"
-            initial="hidden"
-            animate="show"
-            variants={motionVariants}
-          >
+            {/* Danger Zone */}
             <Card className="border-red-200 bg-red-50/50 dark:border-red-900/50 dark:bg-red-900/10 mt-5">
               <CardHeader>
                 <CardTitle className="text-red-600 dark:text-red-400">Danger Zone</CardTitle>
@@ -516,20 +489,20 @@ export default function Settings() {
                       </AlertDialogHeader>
 
                       <AlertDialogFooter>
-                        <AlertDialogCancel disabled={isLoading}>
+                        <AlertDialogCancel disabled={isDeleteLoading}>
                           Cancel
                         </AlertDialogCancel>
                         <Button
                           variant="destructive"
                           onClick={handleDeleteAccount}
-                          disabled={isLoading}
+                          disabled={isDeleteLoading}
                         >
-                          {isLoading ? "Deleting..." : "Confirm"}
+                          {isDeleteLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                          Confirm
                         </Button>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
-
                 </div>
               </CardContent>
             </Card>
