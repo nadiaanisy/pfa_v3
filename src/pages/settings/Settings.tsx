@@ -390,7 +390,7 @@ export default function Settings() {
                           <SelectValue placeholder="Select currency" />
                         </SelectTrigger>
                         <SelectContent
-                          className="bg-white dark:bg-slate-900/50 border-slate-200 dark:border-slate-800"
+                          className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800"
                         >
                           {CURRENCIES.map((currency) => (
                             <SelectItem key={currency.value} value={currency.value}>
