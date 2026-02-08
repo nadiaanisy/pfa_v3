@@ -385,8 +385,7 @@ export default function Settings() {
                       >
                         <SelectTrigger
                           id="currency"
-                          className="pl-9 border-slate-300 bg-[#f3f3f5] dark:bg-[color-mix(in_oklab,var(--input)_30%,transparent)] text-slate-900 dark:text-slate-100 focus:ring-indigo-500 focus:border-indigo-500"
-                          
+                          className="pl-9 border-slate-300 bg-[#f3f3f5] dark:bg-[color-mix(in_oklab,var(--input)_30%,transparent)] text-slate-900 dark:text-slate-100 focus:ring-indigo-500 focus:border-indigo-500" 
                         >
                           <SelectValue placeholder="Select currency" />
                         </SelectTrigger>
