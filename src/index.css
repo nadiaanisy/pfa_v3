@@ -236,3 +236,7 @@ a {
 .dark input {
   background-color: color-mix(in oklab, var(--input) 30%, transparent);
 }
+
+.bg-destructive {
+  background-color: var(--destructive);
+}
