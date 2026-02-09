@@ -4,10 +4,6 @@ import {
   useMemo
 } from 'react';
 import {
-  format,
-//   parse
-} from 'date-fns';
-import { 
   PieChart,
   Pie,
   Cell,
@@ -15,6 +11,23 @@ import {
   Tooltip,
   Legend
 } from 'recharts';
+import {
+  Plus,
+  Wallet,
+  TrendingUp,
+  DollarSign,
+  Loader2,
+  MoreHorizontal,
+  Trash2,
+  PieChart as PieChartIcon,
+  CreditCard,
+  Filter,
+  ArrowUpDown,
+  CalendarIcon,
+  // Minus
+} from 'lucide-react';
+import { toast } from 'sonner';
+import { format } from 'date-fns';
 import {
   Dialog,
   DialogContent,
@@ -25,21 +38,7 @@ import {
   DialogTrigger,
   DialogClose
 } from '../../components/ui/dialog';
-import { 
-  Plus,
-  Wallet,
-  TrendingUp,
-  DollarSign,
-  MoreHorizontal,
-  Trash2,
-  PieChart as PieChartIcon,
-  CreditCard,
-  Filter,
-  ArrowUpDown,
-  CalendarIcon,
-//   Minus
-} from 'lucide-react';
-import { 
+import {
   Card, 
   CardContent, 
   CardHeader, 
@@ -56,7 +55,8 @@ import {
 import { motion } from 'motion/react';
 import {
   INCOME_CHARTS_COLORS,
-  INCOME_TYPES
+  INCOME_TYPES,
+  RANDOM_COLORS
 } from '../../miscellaneous/Constants';
 import {
   Pagination,
@@ -72,36 +72,56 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from '../../components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '../../components/ui/alert-dialog';
 import { Label } from '../../components/ui/label';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import {
   addIncomeSourceFunction,
+  deleteIncomeSourceFunction,
   getIncomeSourcesFunction
 } from '../../components/functions/income-sources';
 import { useAuth } from '../../miscellaneous/Providers';
 import { IncomeSource } from '../../miscellaneous/Interfaces';
 import { formatCurrency } from '../../components/functions/formatCurrency';
 import { formatDateWithSuffix } from '../../components/functions/formatDateWithSuffix';
-import { toast } from 'sonner';
-import { set } from 'zod';
-
+type SortOrder =
+  | "newest"
+  | "oldest"
+  | "highest"
+  | "lowest"
+  | "name-asc"
+  | "name-desc";
 
 export default function IncomeSources() {
   const { user } = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
+//   const [isLoading, setIsLoading] = useState(false);
   const [incomeSources, setIncomeSources] = useState<IncomeSource[]>([]);
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isAddLoading, setIsAddLoading] = useState(false);
+  const [isDeleteLoading, setIsDeleteLoading] = useState(false);
   // const [spendDialogOpen, setSpendDialogOpen] = useState(false);
   // const [selectedSourceId, setSelectedSourceId] = useState<string | null>(null);
-
+  
+  // Delete Confirmation State
+  const [sourceToDelete, setSourceToDelete] = useState<any | null>(null);
+  
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 4;
 
   // Filter & Sort State
   const [filterType, setFilterType] = useState<string>("all");
-  const [sortOrder, setSortOrder] = useState<string>("newest");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("newest");
   const [filterYear, setFilterYear] = useState<string>("all");
   const [filterMonth, setFilterMonth] = useState<string>("all");
 
@@ -114,24 +134,29 @@ export default function IncomeSources() {
   // const [spendAmount, setSpendAmount] = useState("");
 
   useEffect(() => {
+    if (!user?.id) return;
+  
     const fetchIncomeSources = async () => {
-      const data = await getIncomeSourcesFunction(user.id);
-      setIncomeSources(data as IncomeSource[]);
+      try {
+        const data = await getIncomeSourcesFunction(user.id);
+        setIncomeSources(data as IncomeSource[]);
+      } catch {
+        toast.error('Failed to load income sources.');
+      }
     };
     fetchIncomeSources();
   }, [user.id]);
 
-  const totalIncome = incomeSources.reduce((sum, source) => sum + source.amount, 0);
-  const totalSpent = incomeSources.reduce((sum, source) => sum + source.amount - source.balance, 0);
-  const chartData = incomeSources.map(source => ({
-    name: source.name,
-    value: source.amount
-  }));
+  useEffect(() => {
+    if (filterYear === "all") {
+      setFilterMonth("all");
+    }
+  }, [filterYear]);
 
   // Extract unique years from data for filter
   const availableYears = useMemo(() => {
     const years = new Set(incomeSources.map(s => new Date(s.purposeMonth).getFullYear().toString()));
-    years.add(new Date().getFullYear().toString()); // Always include current year
+    years.add(new Date().getFullYear().toString());
     return Array.from(years).sort((a, b) => b.localeCompare(a));
   }, [incomeSources]);
 
@@ -184,6 +209,33 @@ export default function IncomeSources() {
     return result;
   }, [incomeSources, filterType, sortOrder, filterYear, filterMonth]);
 
+  const chartData = useMemo(
+    () => filteredAndSortedSources.map(source => ({
+      name: source.name,
+      value: source.amount
+    })),
+    [filteredAndSortedSources]
+  );
+
+  const filteredTotalIncome = useMemo(
+    () => filteredAndSortedSources.reduce((sum, source) => sum + source.amount, 0),
+    [filteredAndSortedSources]
+  );
+
+  const filteredTotalSpent = useMemo(
+    () =>
+      filteredAndSortedSources.reduce(
+        (sum, source) => sum + (source.amount - source.balance),
+        0
+      ),
+    [filteredAndSortedSources]
+  );
+
+  const filteredRemaining = useMemo(
+    () => filteredTotalIncome - filteredTotalSpent,
+    [filteredTotalIncome, filteredTotalSpent]
+  );
+
   // Calculate Pagination based on filtered results
   const totalPages = Math.ceil(filteredAndSortedSources.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -191,7 +243,7 @@ export default function IncomeSources() {
   const currentSources = filteredAndSortedSources.slice(indexOfFirstItem, indexOfLastItem);
 
   // Reset page when filters change
-  useMemo(() => {
+  useEffect(() => {
     setCurrentPage(1);
   }, [filterType, sortOrder, filterYear, filterMonth]);
 
@@ -201,33 +253,35 @@ export default function IncomeSources() {
     }
   };
 
-  const ProgressBar = ({ value, max }: { value: number, max: number }) => {
-    const percentage = Math.min(100, Math.max(0, (value / max) * 100));
-  
-    let gradient = "from-red-500 to-pink-500";
-    if (percentage > 50) gradient = "from-amber-500 to-orange-500";
-    if (percentage > 80) gradient = "from-emerald-500 to-teal-500";
-  
-    return (
-      <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800 mt-2">
-        <motion.div 
-          className={`h-full bg-gradient-to-r ${gradient}`}
-          initial={{ width: 0 }}
-          animate={{ width: `${percentage}%` }}
-          transition={{ duration: 1, ease: "easeOut" }}
-        />
-      </div>
-    );
-  };
+  const ProgressBar = useMemo(() => {
+    return ({ value, max }: { value: number, max: number }) => {
+      const percentage = max > 0 ? Math.min(100, Math.max(0, (value / max) * 100)) : 0;
+
+      let gradient = "from-red-500 to-pink-500";
+      if (percentage > 50) gradient = "from-amber-500 to-orange-500";
+      if (percentage > 80) gradient = "from-emerald-500 to-teal-500";
+
+      return (
+        <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800 mt-2">
+          <motion.div 
+            className={`h-full bg-gradient-to-r ${gradient}`}
+            initial={{ width: 0 }}
+            animate={{ width: `${percentage}%` }}
+            transition={{ duration: 1, ease: "easeOut" }}
+          />
+        </div>
+      );
+    };
+  }, []);
 
   const handleAddIncome = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isAddLoading) return;
 
     if (!newIncomeName || !newIncomeAmount || !newIncomePurpose) return;
-    const colors = ['#A8D5BA', '#FFD4A3', '#B4A7D6', '#FFB4B4', '#A3C4F3'];
-    const color = colors[Math.floor(Math.random() * colors.length)];
 
-    setIsLoading(true);
+    const color = RANDOM_COLORS[Math.floor(Math.random() * RANDOM_COLORS.length)];
+    setIsAddLoading(true);
     try {
       const result = await addIncomeSourceFunction({
         user_id: user.id,
@@ -251,16 +305,56 @@ export default function IncomeSources() {
     } catch (err: any) {
       toast.error(err.message || 'Failed to add income source.');
     } finally {
-      setIsLoading(false);
+      setIsAddLoading(false);
     }
-  }
-  const deleteIncomeSource = async (id: string) => {};
-//   const handleSpend = async (e: React.FormEvent) => {}
-  
-//   const openSpendDialog = (id: string) => {
-//     setSelectedSourceId(id);
-//     setSpendDialogOpen(true);
-//   };
+  };
+
+  const deleteIncomeSource = async () => {
+    if (!sourceToDelete) return;
+
+    setIsDeleteLoading(true);
+    try {
+      const success = await deleteIncomeSourceFunction(sourceToDelete);
+
+      if (success) {
+        toast.success('Income source deleted successfully.');
+
+        setIncomeSources(prev => {
+          const updated = prev.filter(
+            (source: any) => source.id !== sourceToDelete
+          );
+
+          const newTotalPages = Math.ceil(updated.length / itemsPerPage);
+          if (currentPage > newTotalPages) {
+            setCurrentPage(Math.max(1, newTotalPages));
+          }
+
+          return updated;
+        });
+
+        setSourceToDelete(null);
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to delete income source.');
+    } finally {
+      setIsDeleteLoading(false);
+    }
+  };
+
+  // const handleSpend = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   if (!selectedSourceId || !spendAmount) return;
+    
+  //   await spendFromIncome(selectedSourceId, parseFloat(spendAmount));
+  //   setSpendAmount("");
+  //   setSpendDialogOpen(false);
+  //   setSelectedSourceId(null);
+  // };
+
+  // const openSpendDialog = (id: string) => {
+  //   setSelectedSourceId(id);
+  //   setSpendDialogOpen(true);
+  // };
 
   const container = {
     hidden: { opacity: 0 },
@@ -278,7 +372,7 @@ export default function IncomeSources() {
   };
 
   return (
-    <motion.div 
+    <motion.div
       variants={container}
       initial="hidden"
       animate="show"
@@ -318,7 +412,7 @@ export default function IncomeSources() {
                     value={newIncomeName}
                     onChange={(e) => setNewIncomeName(e.target.value)}
                     required
-                    className="border-slate-300 bg-[#f3f3f5] dark:bg-[color-mix(in_oklab,var(--input)_30%,transparent)] text-slate-900 dark:text-slate-100 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="text-slate-900 dark:text-slate-100 focus:ring-indigo-500 focus:border-indigo-500"
                   />
                 </div>
                 <div className="space-y-2">
@@ -329,7 +423,7 @@ export default function IncomeSources() {
                     required
                   >
                     <SelectTrigger
-                      className="pl-9 border-slate-300 bg-[#f3f3f5] dark:bg-[color-mix(in_oklab,var(--input)_30%,transparent)] text-slate-900 dark:text-slate-100 focus:ring-indigo-500 focus:border-indigo-500"
+                      className="text-slate-900 dark:text-slate-100 focus:ring-indigo-500 focus:border-indigo-500"
                     >
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
@@ -347,7 +441,7 @@ export default function IncomeSources() {
                   <div className="relative">
                     <DollarSign className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
                     <Input 
-                      className="pl-9 border-slate-300 bg-[#f3f3f5] dark:bg-[color-mix(in_oklab,var(--input)_30%,transparent)] text-slate-900 dark:text-slate-100 focus:ring-indigo-500 focus:border-indigo-500"
+                      className="pl-9 text-slate-900 dark:text-slate-100 focus:ring-indigo-500 focus:border-indigo-500"
                       id="amount" 
                       type="number" 
                       placeholder="0.00" 
@@ -376,7 +470,7 @@ export default function IncomeSources() {
                     value={newIncomePurpose}
                     onChange={(e) => setNewIncomePurpose(e.target.value)}
                     required
-                    className="border-slate-300 bg-[#f3f3f5] dark:bg-[color-mix(in_oklab,var(--input)_30%,transparent)] text-slate-900 dark:text-slate-100 focus:ring-indigo-500 focus:border-indigo-500 [color-scheme:light] dark:[color-scheme:dark]"
+                    className="text-slate-900 dark:text-slate-100 focus:ring-indigo-500 focus:border-indigo-500 [color-scheme:light] dark:[color-scheme:dark]"
                   />
                 </div>
                 <DialogFooter className="pt-4">
@@ -386,8 +480,9 @@ export default function IncomeSources() {
                   <Button
                     type="submit"
                     className="bg-indigo-600 hover:bg-indigo-700 text-white"
-                    disabled={isLoading}
+                    disabled={isAddLoading}
                   >
+                    {isAddLoading && <Loader2 className="h-4 w-4 animate-spin" />}
                     Add Source
                   </Button>
                 </DialogFooter>
@@ -425,12 +520,50 @@ export default function IncomeSources() {
               </div>
             </div>
             <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setSpendDialogOpen(false)}>Cancel</Button>
-                <Button type="submit" className="bg-red-600 hover:bg-red-700 text-white">Record Expense</Button>
+              <Button type="button" variant="outline" onClick={() => setSpendDialogOpen(false)}>Cancel</Button>
+              <Button type="submit" className="bg-red-600 hover:bg-red-700 text-white">Record Expense</Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog> */}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog
+        open={!!sourceToDelete}
+        onOpenChange={(open) => {
+          // Only allow closing if NOT loading
+          if (!open && !isDeleteLoading) {
+            setSourceToDelete(null);
+          }
+        }}
+      >
+        <AlertDialogContent className="bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-800">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Income Source?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this income source and all associated tracking data.
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleteLoading}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={(e) => {
+                e.preventDefault();
+                deleteIncomeSource();
+              }}
+              className="bg-red-600 hover:bg-red-700 text-white"
+              disabled={isDeleteLoading}
+            >
+              
+              {isDeleteLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Summary Cards */}
       <motion.div variants={item} className="grid gap-6 md:grid-cols-3">
@@ -440,9 +573,9 @@ export default function IncomeSources() {
             <Wallet className="h-4 w-4 text-indigo-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">{formatCurrency(totalIncome, user.currency)}</div>
+            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">{formatCurrency(filteredTotalIncome, user.currency)}</div>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              From {incomeSources.length} sources
+              From {filteredAndSortedSources.length} sources
             </p>
           </CardContent>
         </Card>
@@ -453,9 +586,9 @@ export default function IncomeSources() {
             <CreditCard className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">{formatCurrency(totalSpent, user.currency)}</div>
+            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">{formatCurrency(filteredTotalSpent, user.currency)}</div>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              {Math.round((totalSpent / (totalIncome || 1)) * 100)}% of total income
+              {Math.round((filteredTotalSpent / (filteredTotalIncome || 1)) * 100)}% of total income
             </p>
           </CardContent>
         </Card>
@@ -466,7 +599,7 @@ export default function IncomeSources() {
             <TrendingUp className="h-4 w-4 text-emerald-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">{formatCurrency(totalIncome - totalSpent, user.currency)}</div>
+            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">{formatCurrency(filteredRemaining, user.currency)}</div>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               Available for saving/goals
             </p>
@@ -489,7 +622,7 @@ export default function IncomeSources() {
             </CardHeader>
             <CardContent>
               <div className="h-[250px] w-full">
-                {incomeSources.length > 0 ? (
+                {filteredAndSortedSources.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
@@ -547,7 +680,8 @@ export default function IncomeSources() {
                     value={filterType}
                     onValueChange={setFilterType}
                   >
-                    <SelectTrigger className="h-8 w-[140px] text-xs">
+                    <SelectTrigger className="h-8 w-[130px] text-xs">
+                      <Filter className="mr-2 h-3 w-3" />
                       <SelectValue placeholder="Type" />
                     </SelectTrigger>
                     <SelectContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
@@ -560,7 +694,7 @@ export default function IncomeSources() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <Select value={sortOrder} onValueChange={setSortOrder}>
+                  <Select value={sortOrder} onValueChange={(value) => setSortOrder(value as SortOrder)}>
                     <SelectTrigger className="h-8 w-[140px] text-xs">
                       <ArrowUpDown className="mr-2 h-3 w-3" />
                       <SelectValue placeholder="Sort" />
@@ -579,7 +713,7 @@ export default function IncomeSources() {
                 <div className="flex items-center gap-2">
                   <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 mx-1"></div>
                   <Select value={filterYear} onValueChange={setFilterYear}>
-                    <SelectTrigger className="h-8 w-[130px] text-xs">
+                    <SelectTrigger className="h-8 w-[100px] text-xs">
                       <CalendarIcon className="mr-2 h-3 w-3" />
                       <SelectValue placeholder="Year" />
                     </SelectTrigger>
@@ -592,7 +726,7 @@ export default function IncomeSources() {
                   </Select>
 
                   <Select value={filterMonth} onValueChange={setFilterMonth}>
-                    <SelectTrigger className="h-8 w-[130px] text-xs" disabled={filterYear === "all"}>
+                    <SelectTrigger className="h-8 w-[110px] text-xs" disabled={filterYear === "all"}>
                       <SelectValue placeholder="Month" />
                     </SelectTrigger>
                     <SelectContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
@@ -646,7 +780,7 @@ export default function IncomeSources() {
                     )}
                   </div>
                 ) : (
-                  currentSources.map((source) => (
+                  currentSources.map((source: IncomeSource) => (
                     <div 
                       key={source.id} 
                       className="p-4 rounded-xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 hover:shadow-md transition-all group"
@@ -667,12 +801,12 @@ export default function IncomeSources() {
                         </div>
                         <div className="flex items-center gap-4">
                           <div className="text-right">
-                             <div className="font-bold text-slate-900 dark:text-slate-100">
-                                {formatCurrency(source.amount, user.currency)}
-                             </div>
-                             <div className="text-xs text-slate-500 dark:text-slate-400">
-                                {formatCurrency(source.amount - (source.amount - source.balance), user.currency)} remaining
-                             </div>
+                            <div className="font-bold text-slate-900 dark:text-slate-100">
+                              {formatCurrency(source.amount, user.currency)}
+                            </div>
+                            <div className="text-xs text-slate-500 dark:text-slate-400">
+                              {formatCurrency(source.balance, user.currency)} remaining
+                            </div>
                           </div>
                           
                           <DropdownMenu>
@@ -682,7 +816,8 @@ export default function IncomeSources() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent
-                              align="end"className="bg-white dark:bg-black border border-slate-200 dark:border-slate-800 shadow-none"
+                              align="end"
+                              className="bg-white dark:bg-black border border-slate-200 dark:border-slate-800 shadow-none"
                             >
                               {/* <DropdownMenuItem 
                                 onClick={() => openSpendDialog(source.id)}
@@ -692,7 +827,7 @@ export default function IncomeSources() {
                               </DropdownMenuItem> */}
                               <DropdownMenuItem 
                                 className="text-red-600 dark:text-red-400 cursor-pointer focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/20"
-                                onClick={() => deleteIncomeSource(source.id)}
+                                onClick={() => setSourceToDelete(source.id)}
                               >
                                 <Trash2 className="mr-2 h-4 w-4" /> Delete
                               </DropdownMenuItem>
