@@ -680,7 +680,7 @@ export default function IncomeSources() {
                     value={filterType}
                     onValueChange={setFilterType}
                   >
-                    <SelectTrigger className="h-8 w-[130px] text-xs">
+                    <SelectTrigger className="h-8 w-[140px] text-xs">
                       <Filter className="mr-2 h-3 w-3" />
                       <SelectValue placeholder="Type" />
                     </SelectTrigger>
@@ -713,7 +713,7 @@ export default function IncomeSources() {
                 <div className="flex items-center gap-2">
                   <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 mx-1"></div>
                   <Select value={filterYear} onValueChange={setFilterYear}>
-                    <SelectTrigger className="h-8 w-[100px] text-xs">
+                    <SelectTrigger className="h-8 w-[130px] text-xs">
                       <CalendarIcon className="mr-2 h-3 w-3" />
                       <SelectValue placeholder="Year" />
                     </SelectTrigger>
@@ -726,7 +726,7 @@ export default function IncomeSources() {
                   </Select>
 
                   <Select value={filterMonth} onValueChange={setFilterMonth}>
-                    <SelectTrigger className="h-8 w-[110px] text-xs" disabled={filterYear === "all"}>
+                    <SelectTrigger className="h-8 w-[130px] text-xs" disabled={filterYear === "all"}>
                       <SelectValue placeholder="Month" />
                     </SelectTrigger>
                     <SelectContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
