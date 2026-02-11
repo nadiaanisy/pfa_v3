@@ -39,9 +39,7 @@ export default function Login () {
 
       login(user);
       toast.success("Welcome back!");
-      setTimeout(() => {
-        navigate("/dashboard");
-      }, 2000);
+      navigate("/dashboard");
     } catch (error: any) {
       toast.error(error.message || "Login failed");
       return;
