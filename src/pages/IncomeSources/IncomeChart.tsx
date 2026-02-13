@@ -13,7 +13,7 @@ import {
   CardTitle
 } from '../../components/ui/card';
 import { PieChartIcon } from 'lucide-react';
-import { INCOME_CHARTS_COLORS } from '../../miscellaneous/Constants';
+import { CHARTS_COLORS } from '../../miscellaneous/Constants';
 
 interface Props {
   data: { name: string; value: number }[];
@@ -46,7 +46,7 @@ export default function IncomeChart({ data }: Props) {
                   className="text-slate-200 dark:text-slate-800"
                 >
                   {data.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={INCOME_CHARTS_COLORS[index % INCOME_CHARTS_COLORS.length]} />
+                    <Cell key={`cell-${index}`} fill={CHARTS_COLORS[index % CHARTS_COLORS.length]} />
                   ))}
                 </Pie>
                 <Tooltip 
