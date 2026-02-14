@@ -120,9 +120,9 @@ export default function IncomeSources() {
     result.sort((a, b) => {
       switch (sortOrder) {
         case "newest":
-          return new Date(b.purposeMonth).getTime() - new Date(a.purposeMonth).getTime();
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
         case "oldest":
-          return new Date(a.purposeMonth).getTime() - new Date(b.purposeMonth).getTime();
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
         case "highest":
           return b.amount - a.amount;
         case "lowest":
@@ -198,7 +198,10 @@ export default function IncomeSources() {
     e.preventDefault();
     if (isAddLoading) return;
 
-    if (!newIncomeName || !newIncomeAmount || !newIncomePurpose) return;
+    if (!newIncomeName || !newIncomeAmount || !newIncomePurpose) {
+      toast.error("Please fill all required fields");
+      return;
+    }
 
     const color = RANDOM_COLORS[Math.floor(Math.random() * RANDOM_COLORS.length)];
     setIsAddLoading(true);

@@ -12,6 +12,7 @@ import {
 import { Button } from '../../components/ui/button';
 import { IncomeSource } from '../../miscellaneous/Interfaces';
 import { formatCurrency } from '../../components/functions/formatCurrency';
+import { capitalizeFirstLetter } from '../../components/functions/capitalizeFirstLetter';
 
 // COMPONENTS
 import ProgressBar from './ProgressBar';
@@ -37,7 +38,7 @@ export default function IncomeListItem({
           <div>
             <h4 className="font-semibold text-slate-900 dark:text-slate-100">{source.name}</h4>
             <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-              <span>{source.type}</span>
+              <span>{capitalizeFirstLetter(source.type)}</span>
               <span>•</span>
               <span>{new Date(source.purposeMonth).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}</span>
             </div>
