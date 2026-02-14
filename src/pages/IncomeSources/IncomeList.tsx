@@ -36,6 +36,7 @@ type SortOrder =
 interface Props {
   sources: IncomeSource[];
   currency: string;
+  onEdit: (source: IncomeSource) => void;
   onDelete: (id: string) => void;
   filterType: string;
   setFilterType: (type: string) => void;
@@ -56,6 +57,7 @@ interface Props {
 export default function IncomeList({
   sources,
   currency,
+  onEdit,
   onDelete,
   filterType,
   setFilterType,
@@ -128,7 +130,7 @@ export default function IncomeList({
                 </SelectTrigger>
                 <SelectContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
                   <SelectItem value="all">All Years</SelectItem>
-                  {availableYears.map((year: any) => (
+                  {availableYears.map((year) => (
                     <SelectItem key={year} value={year}>{year}</SelectItem>
                   ))}
                 </SelectContent>
@@ -182,6 +184,7 @@ export default function IncomeList({
                     setFilterType("all");
                     setFilterYear("all");
                     setFilterMonth("all");
+                    setSortOrder("newest");
                   }}>Clear filters</Button>
                 ) : (
                   <Button variant="link" onClick={() => setIsAddOpen(true)}>Add your first income source</Button>
@@ -193,6 +196,7 @@ export default function IncomeList({
                   key={source.id}
                   source={source}
                   currency={currency}
+                  onEdit={onEdit}
                   onDelete={onDelete}
                 />
               ))

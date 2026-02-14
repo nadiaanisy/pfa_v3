@@ -20,12 +20,14 @@ import ProgressBar from './ProgressBar';
 interface Props {
   source: IncomeSource;
   currency: string;
+  onEdit: (id: string) => void;
   onDelete: (id: string) => void;
 }
 
 export default function IncomeListItem({
   source,
   currency,
+  onEdit,
   onDelete
 }: Props) {
   return (
@@ -70,6 +72,12 @@ export default function IncomeListItem({
               >
                 <Minus className="mr-2 h-4 w-4" /> Record Expense
               </DropdownMenuItem> */}
+              <DropdownMenuItem 
+                onClick={() => onEdit(source.id)}
+                className="cursor-pointer"
+              >
+                <DollarSign className="mr-2 h-4 w-4" /> Edit
+              </DropdownMenuItem>
               <DropdownMenuItem 
                 className="text-red-600 dark:text-red-400 cursor-pointer focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/20"
                 onClick={() => onDelete(source.id)}

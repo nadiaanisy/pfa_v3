@@ -25,6 +25,7 @@ import { Button } from '../../components/ui/button';
 import { INCOME_TYPES } from '../../miscellaneous/Constants';
 
 interface Props {
+  isEditing?: boolean;
   isOpen: boolean;
   setIsOpen: (v: boolean) => void;
   isLoading: boolean;
@@ -41,6 +42,7 @@ interface Props {
 }
 
 export default function AddIncomeDialog({
+  isEditing = false,
   isOpen,
   setIsOpen,
   isLoading,
@@ -64,10 +66,8 @@ export default function AddIncomeDialog({
         className="sm:max-w-[425px] bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-800"
       >
         <DialogHeader>
-          <DialogTitle>Add Income Source</DialogTitle>
-          <DialogDescription>
-            Add a new income stream to your portfolio.
-          </DialogDescription>
+          <DialogTitle>{isEditing ? 'Edit Income Source' : 'Add Income Source'}</DialogTitle>
+          <DialogDescription>{isEditing ? 'Edit your existing income source details.' : 'Add a new income stream to your portfolio.'}</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
@@ -89,8 +89,7 @@ export default function AddIncomeDialog({
             <Select
               value={newIncomeType}
               onValueChange={(value) => setNewIncomeType(value as 'salary' | 'business' | 'dividend' | 'freelance' | 'gift' | 'investment' | 'loan' | 'other' | 'rental')}
-              required
-            >
+              >
               <SelectTrigger
                 className="text-slate-900 dark:text-slate-100 focus:ring-indigo-500 focus:border-indigo-500"
               >
@@ -113,6 +112,7 @@ export default function AddIncomeDialog({
                 id="amount" 
                 type="number" 
                 placeholder="0.00" 
+                min="0"
                 step="0.01"
                 value={newIncomeAmount}
                 required
@@ -122,7 +122,7 @@ export default function AddIncomeDialog({
                       setNewIncomeAmount('');
                       return;
                     }
-                    if (/^\d+(\.\d{0,2})?$/.test(val)) {
+                    if (/^\d*(\.\d{0,2})?$/.test(val)) {
                       setNewIncomeAmount(val);
                     }
                   }
@@ -153,7 +153,7 @@ export default function AddIncomeDialog({
               disabled={isLoading}
             >
               {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-              Add Source
+              {isEditing ? "Update Source" : "Add Source"}
             </Button>
           </DialogFooter>
         </form>

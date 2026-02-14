@@ -14,7 +14,8 @@ import { Button } from '../../components/ui/button';
 import {
   addIncomeSourceFunction,
   deleteIncomeSourceFunction,
-  getIncomeSourcesFunction
+  getIncomeSourcesFunction,
+  updateIncomeSourceFunction
 } from '../../components/functions/income-sources';
 import { useAuth } from '../../miscellaneous/Providers';
 import { IncomeSource } from '../../miscellaneous/Interfaces';
@@ -43,6 +44,9 @@ export default function IncomeSources() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isAddLoading, setIsAddLoading] = useState(false);
   const [isDeleteLoading, setIsDeleteLoading] = useState(false);
+
+  // Edit State
+  const [sourceToEdit, setSourceToEdit] = useState<IncomeSource | null>(null);
   
   // Delete Confirmation State
   const [sourceToDelete, setSourceToDelete] = useState<any | null>(null);
@@ -75,7 +79,7 @@ export default function IncomeSources() {
       }
     };
     fetch();
-  }, [user.id]);
+  }, [user?.id]);
 
   useEffect(() => {
     if (filterYear === "all") {
@@ -111,8 +115,7 @@ export default function IncomeSources() {
     if (filterMonth !== "all") {
       result = result.filter(source => {
         const d = new Date(source.purposeMonth);
-        // filterMonth is '0' to '11'
-        return d.getMonth().toString() === filterMonth;
+        return (d.getMonth() + 1).toString() === filterMonth;
       });
     }
 
@@ -166,7 +169,7 @@ export default function IncomeSources() {
   const filteredTotalSpent = useMemo(
     () =>
       filteredAndSortedSources.reduce(
-        (sum, source) => sum + (source.amount - source.balance),
+        (sum, source) => sum + Math.max(0, source.amount - source.balance),
         0
       ),
     [filteredAndSortedSources]
@@ -178,7 +181,7 @@ export default function IncomeSources() {
   );
 
   // Calculate Pagination based on filtered results
-  const totalPages = Math.ceil(filteredAndSortedSources.length / itemsPerPage);
+  const totalPages = Math.max(1, Math.ceil(filteredAndSortedSources.length / itemsPerPage));
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentSources = filteredAndSortedSources.slice(indexOfFirstItem, indexOfLastItem);
@@ -193,7 +196,7 @@ export default function IncomeSources() {
       setCurrentPage(page);
     }
   };
-  
+
   const handleAddIncome = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isAddLoading) return;
@@ -202,36 +205,101 @@ export default function IncomeSources() {
       toast.error("Please fill all required fields");
       return;
     }
+    
+    if (sourceToEdit) {
+      try {
+        setIsAddLoading(true);
 
-    const color = RANDOM_COLORS[Math.floor(Math.random() * RANDOM_COLORS.length)];
-    setIsAddLoading(true);
-    try {
-      const result = await addIncomeSourceFunction({
-        user_id: user.id,
-        name: newIncomeName,
-        type: newIncomeType,
-        amount: parseFloat(newIncomeAmount),
-        balance: parseFloat(newIncomeAmount),
-        color,
-        purposeMonth: newIncomePurpose
-      });
+        const oldAmount = sourceToEdit.amount;
+        const oldBalance = sourceToEdit.balance;
 
-      if (result) {
-        toast.success('Income source added successfully.');
-        setIncomeSources(prev => [...prev, result as IncomeSource]);
-        setIsAddOpen(false);
-        setNewIncomeName("");
-        setNewIncomeType('salary');
-        setNewIncomeAmount("");
-        setNewIncomePurpose(format(new Date(), 'yyyy-MM'));
+        // calculate already spent
+        const spent = Math.max(0, oldAmount - oldBalance);
+
+        const newAmountNumber = parseFloat(newIncomeAmount);
+
+        // 🚨 Prevent reducing below spent
+        if (newAmountNumber < spent) {
+          toast.error(
+            `New amount cannot be less than already spent (${spent}).`
+          );
+          return;
+        }
+
+        const newBalance = newAmountNumber - spent;
+        const payload = {
+          id: sourceToEdit.id,
+          name: newIncomeName,
+          type: newIncomeType,
+          amount: newAmountNumber,
+          balance: newBalance,
+          purposeMonth: newIncomePurpose
+        };
+
+        const result = await updateIncomeSourceFunction(sourceToEdit.id, payload);
+
+        if (result) {
+          toast.success("Income updated successfully.");
+
+          setIncomeSources(prev => prev.map(src => src.id === sourceToEdit.id ? { ...src, ...payload } as IncomeSource : src));
+
+          resetAllFormFields();
+          setSourceToEdit(null);
+          setIsAddOpen(false);
+        }
+
+      } catch (err: any) {
+        toast.error(err.message || "Failed to update income.");
+      } finally {
+        setIsAddLoading(false);
       }
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to add income source.');
-    } finally {
-      setIsAddLoading(false);
+    } else {
+      const color = RANDOM_COLORS[Math.floor(Math.random() * RANDOM_COLORS.length)];
+      try {
+        setIsAddLoading(true);
+        const result = await addIncomeSourceFunction({
+          user_id: user.id,
+          name: newIncomeName,
+          type: newIncomeType,
+          amount: parseFloat(newIncomeAmount),
+          balance: parseFloat(newIncomeAmount),
+          color,
+          purposeMonth: newIncomePurpose
+        });
+
+        if (result) {
+          toast.success('Income source added successfully.');
+          setIncomeSources(prev => [...prev, result as IncomeSource]);
+          resetAllFormFields();
+          resetAllFilter();
+          setNewIncomePurpose(format(new Date(), 'yyyy-MM'));
+        }
+      } catch (err: any) {
+        toast.error(err.message || 'Failed to add income source.');
+      } finally {
+        setIsAddLoading(false);
+      }
     }
   };
-  
+
+  const resetAllFormFields = () => {
+    setIsAddOpen(false);
+    setNewIncomeName("");
+    setNewIncomeType('salary');
+    setNewIncomeAmount("");
+    setSourceToEdit(null);
+    setSourceToDelete(null);
+    setNewIncomePurpose(format(new Date(), 'yyyy-MM'));
+  }
+
+  const resetAllFilter = () => {
+    setFilterType("all");
+    setSortOrder("newest");
+    setFilterYear("all");
+    setFilterMonth("all");
+    setCurrentPage(1);
+  }
+
   const deleteIncomeSource = async () => {
     if (!sourceToDelete) return;
 
@@ -295,6 +363,7 @@ export default function IncomeSources() {
 
         <motion.div variants={item}>
           <AddIncomeDialog
+            isEditing={!!sourceToEdit}
             isOpen={isAddOpen}
             setIsOpen={setIsAddOpen}
             isLoading={isAddLoading}
@@ -331,7 +400,7 @@ export default function IncomeSources() {
           totalSpent={filteredTotalSpent}
           remaining={filteredRemaining}
           count={filteredAndSortedSources.length}
-          currency={user.currency}
+          currency={user?.currency ?? "MYR"}
         />
       </motion.div>
 
@@ -351,7 +420,17 @@ export default function IncomeSources() {
         >
           <IncomeList
             sources={currentSources}
-            currency={user.currency}
+            currency={user?.currency ?? "MYR"}
+            onEdit={(source) => {
+              setSourceToEdit(source);
+
+              setNewIncomeName(source.name);
+              setNewIncomeType(source.type);
+              setNewIncomeAmount(source.amount.toString());
+              setNewIncomePurpose(source.purposeMonth);
+
+              setIsAddOpen(true);
+            }}
             onDelete={setSourceToDelete}
             filterType={filterType}
             setFilterType={setFilterType}
