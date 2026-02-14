@@ -5,6 +5,11 @@ type WhereCondition = {
   value: any;
 };
 
+type OrderBy = {
+  column: string;
+  ascending?: boolean;
+};
+
 class DBHelper {
   private table: string;
 
@@ -37,10 +42,41 @@ class DBHelper {
     return data as T;
   }
 
+  async findMany<T>(
+    where?: WhereCondition,
+    orderBy?: OrderBy
+  ): Promise<T[]> {
+    let query = supabase.from(this.table).select('*');
+
+    if (where) {
+      query = query.eq(where.column, where.value);
+    }
+
+    if (orderBy) {
+      query = query.order(orderBy.column, {
+        ascending: orderBy.ascending ?? false,
+      });
+    }
+
+    const { data, error } = await query;
+
+    if (error) throw new Error(error.message);
+    return (data ?? []) as T[];
+  }
+
   async update(where: WhereCondition, data: Record<string, any>) {
     const { error } = await supabase
       .from(this.table)
       .update(data)
+      .eq(where.column, where.value);
+
+    if (error) throw new Error(error.message);
+  }
+
+  async delete(where: WhereCondition): Promise<void> {
+    const { error } = await supabase
+      .from(this.table)
+      .delete()
       .eq(where.column, where.value);
 
     if (error) throw new Error(error.message);
