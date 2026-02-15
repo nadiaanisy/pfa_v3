@@ -72,7 +72,7 @@ export default function AddIncomeDialog({
 
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Source Name</Label>
+            <Label htmlFor="name">Source Name <span className="text-red-500">*</span></Label>
             <Input
               id="name" 
               type="text"
@@ -85,7 +85,7 @@ export default function AddIncomeDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="type">Type</Label>
+            <Label htmlFor="type">Type <span className="text-red-500">*</span></Label>
             <Select
               value={newIncomeType}
               onValueChange={(value) => setNewIncomeType(value as 'salary' | 'business' | 'dividend' | 'freelance' | 'gift' | 'investment' | 'loan' | 'other' | 'rental')}
@@ -105,7 +105,7 @@ export default function AddIncomeDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="amount">Amount</Label>
+              <Label htmlFor="amount">Amount <span className="text-red-500">*</span></Label>
               <div className="relative">
                 <DollarSign className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
                 <Input 
@@ -133,7 +133,7 @@ export default function AddIncomeDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="month">Month/Year (Purpose)</Label>
+              <Label htmlFor="month">Month/Year (Purpose) <span className="text-red-500">*</span></Label>
               <Input 
                 id="month"
                 type="month"
