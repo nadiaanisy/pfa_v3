@@ -18,6 +18,7 @@ import { useAuth } from '../../miscellaneous/Providers';
 import { IncomeSource } from '../../miscellaneous/Interfaces';
 import { RANDOM_COLORS } from '../../miscellaneous/Constants';
 import { formatDateWithSuffix } from '../../components/functions/formatDateWithSuffix';
+import { capitalizeFirstLetter } from '../../components/functions/capitalizeFirstLetter';
 
 // COMPONENTS
 import IncomeList from './IncomeList';
@@ -25,7 +26,8 @@ import IncomeChart from './IncomeChart';
 import AddIncomeDialog from './AddIncomeDialog';
 import DeleteIncomeDialog from './DeleteIncomeDialog';
 import IncomeSummaryCards from './IncomeSummaryCards';
-import { capitalizeFirstLetter } from '../../components/functions/capitalizeFirstLetter';
+import IncomeChartSkeleton from './IncomeChartSkeleton';
+import IncomeSummaryCardsSkeleton from './IncomeSummaryCardsSkeleton';
 
 type SortOrder =
   | "newest"
@@ -41,6 +43,7 @@ export default function IncomeSources() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isAddLoading, setIsAddLoading] = useState(false);
   const [isDeleteLoading, setIsDeleteLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Edit State
   const [sourceToEdit, setSourceToEdit] = useState<IncomeSource | null>(null);
@@ -68,11 +71,14 @@ export default function IncomeSources() {
     if (!user?.id) return;
   
     const fetch = async () => {
+      setIsLoading(true);
       try {
         const data = await getIncomeSourcesFunction(user.id);
         setIncomeSources(data as IncomeSource[]);
       } catch {
         toast.error('Failed to load income sources.');
+      } finally {
+        setIsLoading(false);
       }
     };
     fetch();
@@ -391,13 +397,18 @@ export default function IncomeSources() {
 
       {/* Summary Cards */}
       <motion.div variants={item} className="grid gap-6 md:grid-cols-3">
-        <IncomeSummaryCards
+        {isLoading ? (
+          <IncomeSummaryCardsSkeleton />
+        ) : (
+          <IncomeSummaryCards
           totalIncome={filteredTotalIncome}
           totalSpent={filteredTotalSpent}
           remaining={filteredRemaining}
           count={filteredAndSortedSources.length}
           currency={user?.currency ?? "MYR"}
         />
+        )}
+
       </motion.div>
 
       <div className="grid gap-6 md:grid-cols-3">
@@ -406,7 +417,11 @@ export default function IncomeSources() {
           variants={item}
           className="md:col-span-1"
         >
-          <IncomeChart data={chartData} />
+          {isLoading ? (
+            <IncomeChartSkeleton />
+          ) : (
+            <IncomeChart data={chartData} />
+          )}
         </motion.div>
 
         {/* Income Sources List */}
@@ -442,6 +457,7 @@ export default function IncomeSources() {
             currentPage={currentPage}
             totalPages={totalPages}
             handlePageChange={handlePageChange}
+            isLoading={isLoading}
           />
         </motion.div>
       </div>

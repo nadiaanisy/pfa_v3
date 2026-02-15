@@ -23,6 +23,7 @@ import { INCOME_TYPES } from '../../miscellaneous/Constants';
 import { IncomeSource } from '../../miscellaneous/Interfaces';
 
 // COMPONENTS
+import IncomeListItemSkeleton from './IncomeListItemSkeleton';
 import PaginationControls from '../../components/PaginationControls';
 
 type SortOrder =
@@ -52,6 +53,7 @@ interface Props {
   currentPage: number;
   totalPages: number;
   handlePageChange: (page: number) => void;
+  isLoading: boolean;
 }
 
 export default function IncomeList({
@@ -72,7 +74,8 @@ export default function IncomeList({
   setIsAddOpen,
   currentPage,
   totalPages,
-  handlePageChange
+  handlePageChange,
+  isLoading 
 }: Props) {
   return (
     <>
@@ -176,18 +179,29 @@ export default function IncomeList({
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
-            {sources.length === 0 ? (
+            {isLoading ? (
+              Array.from({ length: 5 }).map((_, index) => (
+                <IncomeListItemSkeleton key={index} />
+              ))
+            ) : sources.length === 0 ? (
               <div className="text-center py-8 text-slate-500">
                 <p>No income sources found.</p>
                 {(filterType !== "all" || filterYear !== "all") ? (
-                  <Button variant="link" onClick={() => {
-                    setFilterType("all");
-                    setFilterYear("all");
-                    setFilterMonth("all");
-                    setSortOrder("newest");
-                  }}>Clear filters</Button>
+                  <Button
+                    variant="link"
+                    onClick={() => {
+                      setFilterType("all");
+                      setFilterYear("all");
+                      setFilterMonth("all");
+                      setSortOrder("newest");
+                    }}
+                  >
+                    Clear filters
+                  </Button>
                 ) : (
-                  <Button variant="link" onClick={() => setIsAddOpen(true)}>Add your first income source</Button>
+                  <Button variant="link" onClick={() => setIsAddOpen(true)}>
+                    Add your first income source
+                  </Button>
                 )}
               </div>
             ) : (

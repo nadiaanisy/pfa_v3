@@ -23,7 +23,7 @@ export default function PaginationControls({
   if (totalPages <= 1) return null;
 
   return (
-    <div className={totalItems > 1 ? "pb-10" : ""}>
+    <div className={totalItems > 1 ? "pb-10" : "pb-9"}>
       <Pagination>
         <PaginationContent>
           <PaginationItem>
