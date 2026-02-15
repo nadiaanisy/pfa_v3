@@ -15,7 +15,7 @@ import { formatCurrency } from '../../components/functions/formatCurrency';
 import { capitalizeFirstLetter } from '../../components/functions/capitalizeFirstLetter';
 
 // COMPONENTS
-import ProgressBar from './ProgressBar';
+import ProgressBar from '../../components/ProgressBar';
 
 interface Props {
   source: IncomeSource;
