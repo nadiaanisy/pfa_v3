@@ -269,7 +269,6 @@ export default function IncomeSources() {
           setIncomeSources(prev => [...prev, result as IncomeSource]);
           resetAllFormFields();
           resetAllFilter();
-          setNewIncomePurpose(format(new Date(), 'yyyy-MM'));
         }
       } catch (err: any) {
         toast.error(err.message || 'Failed to add income source.');
