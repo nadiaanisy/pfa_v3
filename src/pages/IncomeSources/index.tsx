@@ -3,12 +3,9 @@ import {
   useState,
   useMemo
 } from 'react';
-import {
-  Plus,
-  PieChart as PieChartIcon,
-} from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import {Plus } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Button } from '../../components/ui/button';
 import {

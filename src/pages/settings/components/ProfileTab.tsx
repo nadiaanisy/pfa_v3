@@ -25,8 +25,6 @@ import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
 import { Button } from '../../../components/ui/button';
 import { Separator } from '../../../components/ui/separator';
-import { useAvatarSettings } from '../hooks/useAvatarSettings';
-import { useProfileSettings } from '../hooks/useProfileSettings';
 
 export default function ProfileTab({ profile, avatar }: any) {
   return (
