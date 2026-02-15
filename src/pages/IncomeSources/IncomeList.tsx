@@ -23,7 +23,7 @@ import { INCOME_TYPES } from '../../miscellaneous/Constants';
 import { IncomeSource } from '../../miscellaneous/Interfaces';
 
 // COMPONENTS
-import PaginationControls from './PaginationControls';
+import PaginationControls from '../../components/PaginationControls';
 
 type SortOrder =
   | "newest"
