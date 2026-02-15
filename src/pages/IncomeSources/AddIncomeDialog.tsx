@@ -23,6 +23,7 @@ import { Label } from '../../components/ui/label';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import { INCOME_TYPES } from '../../miscellaneous/Constants';
+import { useEffect } from 'react';
 
 interface Props {
   isEditing?: boolean;
@@ -57,6 +58,19 @@ export default function AddIncomeDialog({
   setNewIncomePurpose,
   trigger,
 }: Props) {
+  const resetForm = () => {
+    setNewIncomeName('');
+    setNewIncomeType('');
+    setNewIncomeAmount('');
+    setNewIncomePurpose('');
+  };
+
+  useEffect(() => {
+    if (!isOpen) {
+      resetForm();
+    }
+  }, [isOpen]);
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
