@@ -95,7 +95,7 @@ export default function AddIncomeDialog({
               >
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
-              <SelectContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+              <SelectContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 max-h-60 overflow-y-auto">
                 {INCOME_TYPES.map((type) => (
                   <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
                 ))}
@@ -103,44 +103,46 @@ export default function AddIncomeDialog({
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="amount">Amount</Label>
-            <div className="relative">
-              <DollarSign className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
-              <Input 
-                className="pl-9 text-slate-900 dark:text-slate-100 focus:ring-indigo-500 focus:border-indigo-500"
-                id="amount" 
-                type="number" 
-                placeholder="0.00" 
-                min="0"
-                step="0.01"
-                value={newIncomeAmount}
-                required
-                onChange={(e) => {
-                  const val = e.target.value;
-                    if (val === '') {
-                      setNewIncomeAmount('');
-                      return;
-                    }
-                    if (/^\d*(\.\d{0,2})?$/.test(val)) {
-                      setNewIncomeAmount(val);
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="amount">Amount</Label>
+              <div className="relative">
+                <DollarSign className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
+                <Input 
+                  className="pl-9 text-slate-900 dark:text-slate-100 focus:ring-indigo-500 focus:border-indigo-500"
+                  id="amount" 
+                  type="number" 
+                  placeholder="0.00" 
+                  min="0"
+                  step="0.01"
+                  value={newIncomeAmount}
+                  required
+                  onChange={(e) => {
+                    const val = e.target.value;
+                      if (val === '') {
+                        setNewIncomeAmount('');
+                        return;
+                      }
+                      if (/^\d*(\.\d{0,2})?$/.test(val)) {
+                        setNewIncomeAmount(val);
+                      }
                     }
                   }
-                }
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="month">Month/Year (Purpose)</Label>
+              <Input 
+                id="month"
+                type="month"
+                value={newIncomePurpose}
+                onChange={(e) => setNewIncomePurpose(e.target.value)}
+                required
+                className="text-slate-900 dark:text-slate-100 focus:ring-indigo-500 focus:border-indigo-500 [color-scheme:light] dark:[color-scheme:dark]"
               />
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="month">Month/Year (Purpose)</Label>
-            <Input 
-              id="month"
-              type="month"
-              value={newIncomePurpose}
-              onChange={(e) => setNewIncomePurpose(e.target.value)}
-              required
-              className="text-slate-900 dark:text-slate-100 focus:ring-indigo-500 focus:border-indigo-500 [color-scheme:light] dark:[color-scheme:dark]"
-            />
           </div>
 
           <DialogFooter className="pt-4">
