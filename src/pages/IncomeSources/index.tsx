@@ -5,7 +5,7 @@ import {
 } from 'react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import {Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Button } from '../../components/ui/button';
 import {
