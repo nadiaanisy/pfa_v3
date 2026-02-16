@@ -1,6 +1,7 @@
 import {
   DollarSign,
   MoreHorizontal,
+  Pencil,
   Trash2
 } from 'lucide-react';
 import {
@@ -76,7 +77,7 @@ export default function IncomeListItem({
                 onClick={() => onEdit(source)}
                 className="cursor-pointer"
               >
-                <DollarSign className="mr-2 h-4 w-4" /> Edit
+                <Pencil className="mr-2 h-4 w-4" /> Edit
               </DropdownMenuItem>
               <DropdownMenuItem 
                 className="text-red-600 dark:text-red-400 cursor-pointer focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/20"
